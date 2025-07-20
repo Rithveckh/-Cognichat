@@ -44,65 +44,41 @@ cd cognichat
 ```
 
 ---
-📦 Local Setup Instructions
 2. Create Virtual Environment
-bash
-Copy
-Edit
+```bash
 python -m venv venv
-On macOS/Linux:
-
-bash
-Copy
-Edit
+```
+```bash
 source venv/bin/activate
-On Windows:
-
-bash
-Copy
-Edit
-venv\Scripts\activate
+On Windows: venv\Scripts\activate
+```
 3. Install Dependencies
-Install packages directly:
-
-bash
-Copy
-Edit
+  Install packages directly:
+```bash
 pip install streamlit langchain langchain-community langchain-groq groq python-dotenv pypdf
+```
 Or using the requirements file:
-
-bash
-Copy
-Edit
+```bash
 pip install -r requirements.txt
+```
+---
 4. Add Your API Key
-Create a .env file in the root directory and add:
-
-env
-Copy
-Edit
-GROQ_API_KEY=your_groq_api_key_here
-5. Run the App
-bash
-Copy
-Edit
+Create a .env file in the root directory and add: GROQ_API_KEY=your_groq_api_key_here
+---
+6. Run the App
+```bash
 streamlit run app.py
+```
 Or:
-
-bash
-Copy
-Edit
+```bash
 python -m streamlit run app.py
+```
+---
+
 ☁️ Deploy on Streamlit Cloud
-Push your code to GitHub
-
-Go to https://share.streamlit.io
-
-Connect your GitHub repo and select app.py as the entry file
-
-Under App Settings → Secrets, add:
-
-GROQ_API_KEY = "your_groq_api_key_here"
-Customize your app's subdomain under App URL
-
-Click Deploy 🚀
+  1.Push your code to GitHub
+  2.Go to https://share.streamlit.io
+  3.Connect your GitHub repo and select app.py as the entry file
+  4.Under App Settings → Secrets, add: GROQ_API_KEY = "your_groq_api_key_here"
+  5.Customize your app's subdomain under App URL
+  6.Click Deploy 🚀
