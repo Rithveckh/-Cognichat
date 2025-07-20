@@ -77,9 +77,9 @@ python -m streamlit run app.py
 ---
 
 ☁️ Deploy on Streamlit Cloud
-  1.Push your code to GitHub
-  2.Go to https://share.streamlit.io
-  3.Connect your GitHub repo and select app.py as the entry file
-  4.Under App Settings → Secrets, add: GROQ_API_KEY = "your_groq_api_key_here"
-  5.Customize your app's subdomain under App URL
-  6.Click Deploy 🚀
+  - Push your code to GitHub
+  - Go to https://share.streamlit.io
+  - Connect your GitHub repo and select app.py as the entry file
+  - Under App Settings → Secrets, add: GROQ_API_KEY = "your_groq_api_key_here"
+  - Customize your app's subdomain under App URL
+  - Click Deploy 🚀
