@@ -48,6 +48,7 @@ cd cognichat
 ```bash
 python -m venv venv
 ```
+Then activate it:
 ```bash
 source venv/bin/activate
 On Windows: venv\Scripts\activate
@@ -65,7 +66,7 @@ pip install -r requirements.txt
 4. Add Your API Key
 Create a .env file in the root directory and add: GROQ_API_KEY=your_groq_api_key_here
 ---
-6. Run the App
+5. Run the App
 ```bash
 streamlit run app.py
 ```
