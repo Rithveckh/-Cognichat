@@ -9,7 +9,7 @@
 
 ## 🚀 Live Demo
 
-👉 [Try Cognichat Now](https://cognichat-ai.streamlit.app)
+👉 [Try Cognichat Now](https://cognichat-ai.streamlit.app/)
 
 ---
 
