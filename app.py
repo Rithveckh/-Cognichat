@@ -1,50 +1,72 @@
 import streamlit as st
-from langchain_groq.chat_models import ChatGroq
+import google.generativeai as genai
 import os
+from dotenv import load_dotenv
+import time
 
-# Load Groq API key from environment variable
-groq_api_key = os.getenv("GROQ_API_KEY")
+# Load API key
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    st.error("❌ GEMINI_API_KEY not found. Make sure it's in your .env file.")
+    st.stop()
+genai.configure(api_key=api_key)
 
-# Initialize Groq chat model
-chat = ChatGroq(
-    model="mistral-saba-24b",
-    api_key=groq_api_key,
-    temperature=0.5,
-)
-
-# Page config
+model = genai.GenerativeModel("gemini-2.5-pro")
 st.set_page_config(page_title="🧠 Cognichat", page_icon="🤖")
 
-# CSS
+# Custom CSS
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Mono&display=swap');
+
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
     background-color: #121212;
     color: white;
 }
-.chat-message {
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    border-radius: 10px;
+
+.message-container {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 2rem;
+}
+
+.message-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-bubble, .bot-bubble {
+    padding: 12px 16px;
+    border-radius: 12px;
+    max-width: 90%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    font-family: 'Fira Mono', monospace;
+    font-size: 0.95rem;
     line-height: 1.5;
 }
-.user-message {
-    background-color: #2c2c2e;
-    text-align: right;
-    color: #ffffff;
-    margin-left: 20%;
+
+.user-bubble {
+    align-self: flex-end;
+    background-color: #2e2e30;
+    color: white;
+    border: 1px solid #4a4a4a;
 }
-.bot-message {
-    background-color: #1f2937;
-    text-align: left;
+
+.bot-bubble {
+    align-self: flex-start;
+    background-color: #1c1c1f;
     color: #d1d5db;
-    margin-right: 20%;
+    border: 1px solid #333;
 }
+
 .title {
     font-size: 2.2rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #00ffff;
     text-align: center;
     margin-bottom: 2rem;
@@ -55,7 +77,7 @@ html, body, [class*="css"] {
 # Title
 st.markdown('<div class="title">🧠 Cognichat</div>', unsafe_allow_html=True)
 
-# Session state init
+# Session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -77,23 +99,15 @@ with st.sidebar:
         f"You: {m['content']}" if m["role"] == "user" else f"Cognichat: {m['content']}"
         for m in st.session_state.messages
     ])
-    st.download_button(
-        label="📥 Download Chat",
-        data=chat_text,
-        file_name="chat_history.txt",
-        mime="text/plain",
-    )
+    st.download_button("📅 Download Chat", chat_text, "chat_history.txt")
 
     st.markdown("---")
-
     memory_toggle = st.toggle("🧠 Enable Chat Memory", value=True)
     if not memory_toggle:
         st.session_state.messages = st.session_state.messages[-1:]
 
     st.markdown("---")
-
-    # File Upload Section
-    st.markdown("### 📎 Upload File")
+    st.markdown("### 📌 Upload File")
     uploaded_file = st.file_uploader("Upload a .txt or .pdf", type=["txt", "pdf"])
     if uploaded_file:
         file_bytes = uploaded_file.read()
@@ -110,31 +124,66 @@ with st.sidebar:
     st.write(f"🗨️ Messages: {len(st.session_state.messages)}")
     st.write(f"📝 Total Words: {sum(len(m['content'].split()) for m in st.session_state.messages)}")
 
-# Display all messages
-for msg in st.session_state.messages:
-    role_class = "user-message" if msg["role"] == "user" else "bot-message"
-    emoji = "🧑" if msg["role"] == "user" else "🤖"
-    st.markdown(f"<div class='chat-message {role_class}'>{emoji} {msg['content']}</div>", unsafe_allow_html=True)
+# Render messages
+st.markdown('<div class="message-container">', unsafe_allow_html=True)
+i = 0
+while i < len(st.session_state.messages):
+    st.markdown('<div class="message-pair">', unsafe_allow_html=True)
+
+    if st.session_state.messages[i]["role"] == "user":
+        user_msg = st.session_state.messages[i]["content"]
+        st.markdown(f"<div class='user-bubble'>🧍 {user_msg}</div>", unsafe_allow_html=True)
+        i += 1
+
+    if i < len(st.session_state.messages) and st.session_state.messages[i]["role"] == "assistant":
+        bot_msg = st.session_state.messages[i]["content"]
+        st.markdown(f"<div class='bot-bubble'>🤖 {bot_msg}</div>", unsafe_allow_html=True)
+        i += 1
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Chat input
-query = st.chat_input("Type your message...", key="chat_input_box")
-
-# Handle input
+query = st.chat_input("Type your message...")
 if query:
-    # If a file was uploaded and awaiting user prompt
+    st.session_state.messages.append({"role": "user", "content": query})
+    st.rerun()
+
+# Stream bot response if needed
+if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+    user_msg = st.session_state.messages[-1]["content"]
+
     if st.session_state.awaiting_file_query and st.session_state.file_content:
-        full_prompt = f"Analyze the following uploaded file content and answer this question:\n\n{st.session_state.file_content[:1000]}...\n\nUser question: {query}"
+        full_prompt = (
+            f"Analyze the following uploaded file content and answer this question:\n\n"
+            f"{st.session_state.file_content[:1000]}...\n\nUser question: {user_msg}"
+        )
         st.session_state.awaiting_file_query = False
         st.session_state.file_content = None
     else:
-        full_prompt = query
+        full_prompt = user_msg
 
-    # Append user message
-    st.session_state.messages.append({"role": "user", "content": query})
+    typing_placeholder = st.empty()
+    typing_placeholder.markdown('<div class="bot-bubble">🤖 Cognichat is typing...</div>', unsafe_allow_html=True)
 
-    # Get bot response
-    with st.spinner("🤖 Cognichat is typing..."):
-        response = chat.invoke([{"role": "user", "content": full_prompt}])
+    response_placeholder = st.empty()
+    bot_response = ""
+    try:
+        stream = model.generate_content(full_prompt, stream=True)
+        for chunk in stream:
+            if chunk.text:
+                for char in chunk.text:
+                    bot_response += char
+                    response_placeholder.markdown(
+                        f'<div class="bot-bubble">🤖 {bot_response}</div>', unsafe_allow_html=True
+                    )
+                    time.sleep(0.005)
+        typing_placeholder.empty()
+        st.session_state.messages.append({"role": "assistant", "content": bot_response})
+    except Exception as e:
+        typing_placeholder.empty()
+        error_msg = f"❌ Error: {e}"
+        st.session_state.messages.append({"role": "assistant", "content": error_msg})
 
-    st.session_state.messages.append({"role": "assistant", "content": response.content})
     st.rerun()
