@@ -4,3 +4,4 @@ langchain-community
 langchain-groq
 groq
 python-dotenv
+google-generativeai
